@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 
 
@@ -40,8 +41,8 @@ public class AlexaWebInformationServiceClientTest {
     
     @BeforeClass
     public static void before() {
-        DefaultAWSCredentialsProviderChain defaultAWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain();
-        credentials = defaultAWSCredentialsProviderChain.getCredentials();
+//        DefaultAWSCredentialsProviderChain defaultAWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain();
+        credentials = new BasicAWSCredentials("AKIAJOLWZWD3OMDEVAGQ", "Cy7Vx1+rnle7pNipWNIoshfUKEObJpRI4NDkPcsw");
     }
     
     @Test

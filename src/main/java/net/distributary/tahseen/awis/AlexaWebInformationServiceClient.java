@@ -9,10 +9,14 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.security.SignatureException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -23,16 +27,19 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.amazonaws.auth.AWS4Signer;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.services.sqs.model.CreateQueueRequest;
+import com.amazonaws.services.sqs.model.transform.CreateQueueRequestMarshaller;
+
 import net.distributary.tahseen.awis.generated.CategoryBrowseResponse;
 import net.distributary.tahseen.awis.generated.CategoryListingsResponse;
 import net.distributary.tahseen.awis.generated.SitesLinkingInResponse;
 import net.distributary.tahseen.awis.generated.TrafficHistoryResponse;
 import net.distributary.tahseen.awis.generated.UrlInfoResponse;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.amazonaws.auth.AWSCredentials;
 
 
 public class AlexaWebInformationServiceClient {
@@ -44,8 +51,11 @@ public class AlexaWebInformationServiceClient {
 
     private static final String DATEFORMAT_AWS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
+	private static final String AWS_REGION = "us-east-1";
+
     
     private AWSCredentials credentials;
+    private AWS4Signer signer = new AWS4Signer();
     
     private Map<String, String> queryParams;
     
@@ -306,7 +316,7 @@ public class AlexaWebInformationServiceClient {
 
         logger.info("Request Url: {}", uri);
         
-        String xmlResponse = makeRequest(uri);
+        String xmlResponse = makeRequest(uri, this.credentials);
 
         xmlResponse = xmlResponse.replace("xmlns:aws=\"http://awis.amazonaws.com/doc/2005-07-11\"", "");
 
@@ -321,24 +331,55 @@ public class AlexaWebInformationServiceClient {
      * @return the XML document as a String
      * @throws IOException
      */
-    public static String makeRequest(String requestUrl) throws IOException {
+    public static String makeRequest(String requestUrl, AWSCredentials credentials) throws IOException {
+    	int i;
+        int c;
+        int lastChar = 0;
+    	String host;
+    	String resourcePath;
+    	StringBuffer sb;
         URL url = new URL(requestUrl);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        
+        HttpURLConnection conn = null;
         InputStream in;
+        String parameterString;
+        CreateQueueRequest createQueueRequest;
+        String[] parameterArray;
+        AWS4Signer aws4Signer;
+        Map<String, List<String>> requestParameters;
+        com.amazonaws.Request<CreateQueueRequest> request;
         try {
+        	createQueueRequest = new CreateQueueRequest("test");
+            request = new CreateQueueRequestMarshaller().marshall(createQueueRequest);
+            parameterString = requestUrl.substring(requestUrl.indexOf("?") + 1);
+            parameterArray = parameterString.split("&");
+            requestParameters = new HashMap<>();
+            for (i = 0; i < parameterArray.length; i++) {
+                requestParameters.put(parameterArray[i].substring(0, parameterArray[i].indexOf("=")), Arrays.asList(parameterArray[i].substring(parameterArray[i].indexOf("=") + 1)));
+            }
+            request.setParameters(requestParameters);
+            //get endpoint from url
+            request.setEndpoint(url.toURI());
+            resourcePath = requestUrl.substring(url.getPath().length(), requestUrl.indexOf("?"));
+            request.setResourcePath(resourcePath);
+            aws4Signer = new AWS4Signer();
+            host = url.getHost();
+            aws4Signer.setServiceName(host);
+            aws4Signer.sign(request, credentials);
+            
+            conn = (HttpURLConnection) url.openConnection();
+            for (Entry<String, String> entry : request.getHeaders().entrySet()) {
+                conn.setRequestProperty(entry.getKey(), entry.getValue());
+            }
             in = conn.getInputStream();
         } catch(Exception e) {
         	logger.error("Http request failed.", e);
             in = conn.getErrorStream();
         }
        
-        StringBuffer sb = null;
+        sb = null;
         if(in != null) {
             // Read the response
             sb = new StringBuffer();
-            int c;
-            int lastChar = 0;
             while ((c = in.read()) != -1) {
                 if (c == '<' && (lastChar == '>'))
                     sb.append('\n');
@@ -350,4 +391,5 @@ public class AlexaWebInformationServiceClient {
         
         return sb == null ? null : sb.toString();
     }
+
 }
