@@ -42,7 +42,6 @@ public class AlexaWebInformationServiceClientTest {
     @BeforeClass
     public static void before() {
         DefaultAWSCredentialsProviderChain defaultAWSCredentialsProviderChain = new DefaultAWSCredentialsProviderChain();
-        //credentials = new BasicAWSCredentials("AKIAJOLWZWD3OMDEVAGQ", "Cy7Vx1+rnle7pNipWNIoshfUKEObJpRI4NDkPcsw");
     }
     
     @Test
