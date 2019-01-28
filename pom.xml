@@ -4,7 +4,7 @@
 	<groupId>net.distributary.tahseen</groupId>
 	<artifactId>aws-java-sdk-awis</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1</version>
+	<version>0.2</version>
 
 	<name>aws-java-sdk-awis</name>
 	<description>Amazon Alexa Web Information Service client</description>
@@ -22,6 +22,19 @@
 		<url>https://github.com/tahseen/aws-java-sdk-awis.git</url>
 	</scm>
 	
+	<distributionManagement>
+		<repository>
+			<id>aws-release</id>
+			<name>AWS Release Repository</name>
+			<url>s3://tahseen.distributary.net/release</url>
+		</repository>
+		<snapshotRepository>
+			<id>aws-snapshot</id>
+			<name>AWS Snapshot Repository</name>
+			<url>s3://tahseen.distributary.net/snapshot</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -32,13 +45,8 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.11.483</version>
+			<version>1.10.10</version>
 		</dependency>
-<dependency>
-    <groupId>com.amazonaws</groupId>
-    <artifactId>aws-java-sdk-sqs</artifactId>
-    <version>1.9.4</version>
-</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
